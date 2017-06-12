@@ -20,7 +20,13 @@
 package bricksnspace.ldpovray;
 
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 import bricksnspace.j3dgeom.Matrix3D;
@@ -36,6 +42,9 @@ import bricksnspace.ldrawlib.LDrawCommand;
  */
 public class LDPovRenderer {
 
+	private final static String POVHEADER = "jbbheader.inc";
+	private final static String POVPRIMITIVES = "jbbprimitives.inc";
+	private final static String POVFONT = "lego-font.ttf";
 	
 	BufferedWriter buffWriter;
 	boolean perspective = true;
@@ -47,14 +56,26 @@ public class LDPovRenderer {
 	
 		
 	
-	public static LDPovRenderer getRenderer(BufferedWriter bw) throws IOException {
+	public static LDPovRenderer getRenderer(File path) throws IOException {
 		
 		LDPovRenderer r = new LDPovRenderer();
-		r.buffWriter = bw;
+		r.buffWriter = new BufferedWriter(new OutputStreamWriter(
+				new FileOutputStream(path),"UTF-8"));
+		File outputDir = path.getParentFile();
+		r.generateHeaders(outputDir);
 		LDPOVRenderedPart.resetPrimitives();
 		return r; 
 	}
 	
+	
+	
+	public void generateHeaders(File path) throws IOException {
+		
+		Files.copy(this.getClass().getResourceAsStream("data/"+POVHEADER),Paths.get(path.getCanonicalPath(),POVHEADER) ,StandardCopyOption.REPLACE_EXISTING);
+		Files.copy(this.getClass().getResourceAsStream("data/"+POVPRIMITIVES),Paths.get(path.getCanonicalPath(),POVPRIMITIVES) ,StandardCopyOption.REPLACE_EXISTING);
+		Files.copy(this.getClass().getResourceAsStream("data/"+POVFONT),Paths.get(path.getCanonicalPath(),POVFONT) ,StandardCopyOption.REPLACE_EXISTING);
+		LDMaterials.generateMaterials(path);
+	}
 	
 	
 	
@@ -71,22 +92,19 @@ public class LDPovRenderer {
 	}
 	
 	
-//	public void addPart(LDPrimitive p) throws IOException {
-//		
-//		LDPOVRenderedPart.newRenderedPart(p, buffWriter,viewMatrix);
-//	}
-	
-	
+
 	public void addModel(List<LDPrimitive> l) throws IOException {
 		
 		for (LDPrimitive p:l){
-			float x = (float) (Math.random()*0.3 - 0.15);
-			float y = (float) (Math.random()*0.3 - 0.15);
-			float z = (float) (Math.random()*0.3 - 0.15);
+			float x = (float) (Math.random()*0.6 - 0.3);
+			float y = (float) (Math.random()*0.6 - 0.3);
+			float z = (float) (Math.random()*0.6 - 0.3);
 			if (p.getType() == LDrawCommand.REFERENCE) {
 				LDPOVRenderedPart.newRenderedPart(p.moveTo(x, y, z), buffWriter,viewMatrix);
 			}
 		}
+		buffWriter.flush();
+		buffWriter.close();
 	}
 	
 	
@@ -94,7 +112,6 @@ public class LDPovRenderer {
 	public void startRender() throws IOException {
 		
 		buffWriter.write("#version 3.7;\n#include \"jbbheader.inc\"\n");
-		//buffWriter.write(lightSource);
 		buffWriter.write('\n');
 		if (perspective) {
 			buffWriter.write(

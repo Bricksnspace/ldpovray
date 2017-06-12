@@ -42,6 +42,8 @@ public class LDMaterials {
 
 	private static String VERSION = "// LDraw to POVRay color and materials (autogenetated) v20170438\n\n";
 	
+	public static String MATERIALSFILE = "jbbmaterials.inc";
+	
 //	private static final String FINISH = 
 //			"\n\n// normal ABS shiny plastic\n"
 //			+ "#declare "+LDrawColorType.SOLID.name()+" = finish {\n"
@@ -103,11 +105,11 @@ public class LDMaterials {
 		// unused constructor
 	}
 	
-	static public void generateMaterials() {
+	static public void generateMaterials(File path) {
 
 		try {
 			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
-					new FileOutputStream(new File("jbbmaterials.inc")),"UTF-8"));
+					new FileOutputStream(new File(path,MATERIALSFILE)),"UTF-8"));
 			bw.write(VERSION);
 			//bw.write(FINISH);
 			List<Integer> l = new ArrayList<Integer>(LDrawColor.getAllColors());
